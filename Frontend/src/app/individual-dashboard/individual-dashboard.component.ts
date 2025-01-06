@@ -14,13 +14,16 @@ export class IndividualDashboardComponent implements OnInit {
   articlesPerPage: number = 5;
   totalPages: number = 0;
   showFullContent: boolean[] = []; // Track which article content should be shown
+  showAddForm: boolean = false; // Control the visibility of the Add Blog form
+  newBlog: { title: string; content: string; fileUrl?: string } = { title: '', content: '' }; // New blog data
+  uploadedFile: File | null = null; // Store the uploaded file
 
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     const user = JSON.parse(localStorage.getItem('email') || '{}');
     console.log(localStorage);
-    
+
     // Check if the user is logged in
     if (user && user.email) {
       this.userName = user.email; // Set the user name from the login data
@@ -29,8 +32,8 @@ export class IndividualDashboardComponent implements OnInit {
     }
 
     // Simulate fetching blog articles
-    this.articles = this.generateBlogArticles(50); 
-    console.log(this.articles) // Generate 50 random blog articles
+    this.articles = this.generateBlogArticles(50);
+    console.log(this.articles); // Generate 50 random blog articles
     this.totalPages = Math.ceil(this.articles.length / this.articlesPerPage);
     this.updatePaginatedArticles();
   }
@@ -116,5 +119,37 @@ export class IndividualDashboardComponent implements OnInit {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.router.navigateByUrl('/login');
+  }
+
+  // Add Blog Feature Methods
+  openAddBlogForm() {
+    this.showAddForm = true;
+    this.newBlog = { title: '', content: '' }; // Reset the form
+    this.uploadedFile = null; // Reset file input
+  }
+
+  cancelAddBlog() {
+    this.showAddForm = false;
+  }
+
+  onFileSelect(event: any) {
+    this.uploadedFile = event.target.files[0];
+  }
+
+  onSubmit() {
+    if (this.newBlog.title && this.newBlog.content) {
+      const newArticle = { ...this.newBlog };
+
+      if (this.uploadedFile) {
+        // Simulate file upload by generating a URL for the uploaded file
+        newArticle.fileUrl = URL.createObjectURL(this.uploadedFile);
+      }
+
+      this.articles.unshift(newArticle); // Add the new article to the top of the list
+      this.totalPages = Math.ceil(this.articles.length / this.articlesPerPage);
+      this.updatePaginatedArticles();
+
+      this.showAddForm = false; // Close the form
+    }
   }
 }
